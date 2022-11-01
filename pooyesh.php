@@ -10,8 +10,8 @@
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  */
 
-if ( ! defined( 'WPINC' ) ) {
-	die( 'No direct access.' );
+if ( ! defined( 'ABSPATH' ) ) {
+	exit();
 }
 
 class Pooyesh {
@@ -37,11 +37,13 @@ class Pooyesh {
 
 		// Plugin activation and deactivation
 		register_activation_hook( __FILE__, array( $this, 'activate' ) );
+		register_activation_hook( __FILE__, array( $this, 'my_custom_table' ) );
 		register_deactivation_hook( __FILE__, array( $this, 'deactivate' ) );
 		add_action( 'after_switch_theme', array( $this, 'activate' ) );
 
 		// Include CSS, JS admin file for Plugin
 		add_action( 'admin_enqueue_scripts', array( $this, 'resources' ) );
+		add_action( 'wp_enqueue_scripts', array( $this, 'front_style' ) );
 
 		// Add custom fields to pooyesh post type
 		add_action( 'add_meta_boxes', array( $this, 'add_meta_boxes' ) );
@@ -51,13 +53,24 @@ class Pooyesh {
 		add_filter( 'manage_pooyesh_posts_columns', array( $this, 'set_custom_pooyesh_columns' ) );
 		add_action( 'manage_pooyesh_posts_custom_column' , array( $this, 'custom_pooyesh_column_data' ), 10, 2 );
 
+        // Front pages of plugin
+		add_filter( 'template_include',  array( $this, 'plugin_custom_template' ) );
+
+        // Form submit sign
+		add_action( 'wp_ajax_sample_custom_form_action', array( $this, 'prefix_save_custom_form_data' ) );
+		add_action( 'wp_ajax_nopriv_sample_custom_form_action', array( $this, 'prefix_save_custom_form_data' ) );
+
 	}
 
 	// Include CSS, JS admin file for Plugin
 	function resources() {
-		wp_enqueue_style( 'bootstrap-css', plugin_dir_url( __FILE__ ) . 'assets/css/bootstrap.min.css' );
-		wp_enqueue_script( 'bootstrap-js', plugin_dir_url( __FILE__ ) . 'assets/js/bootstrap.min.js' );
+		wp_enqueue_style( 'bootstrap-css', plugin_dir_url( __FILE__ ) . 'admin/css/bootstrap.min.css' );
+		wp_enqueue_script( 'bootstrap-js', plugin_dir_url( __FILE__ ) . 'admin/js/bootstrap.min.js' );
 	}
+
+    function front_style() {
+	    wp_enqueue_style( 'bootstrap-front-css', plugin_dir_url( __FILE__ ) . 'public/css/app.css' );
+    }
 
 	// Add custom post type and taxonomy: pooyesh
 	function my_custom_post_type() {
@@ -119,12 +132,33 @@ class Pooyesh {
 	    register_taxonomy( 'pooyesh_category', 'pooyesh', $args );
     }
 
+    // Create new table in database
+    function my_custom_table(){
+
+	    global $wpdb;
+
+	    $charset_collate = $wpdb->get_charset_collate();
+	    $table = $wpdb->prefix . 'pooyesh_user';
+
+	    $table_query = "CREATE TABLE $table(
+            id int(11) NOT NULL AUTO_INCREMENT,
+            user_id int(11) NOT NULL,
+            post_id int(11) NOT NULL,
+            date date NOT NULL,
+            PRIMARY KEY id (id),
+            FOREIGN KEY (user_id) REFERENCES ".$wpdb->prefix."users(id) ON DELETE CASCADE ON UPDATE CASCADE,
+            FOREIGN KEY (post_id) REFERENCES ".$wpdb->prefix."posts(id) ON DELETE CASCADE ON UPDATE CASCADE
+        )$charset_collate;";
+
+	    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+	    dbDelta($table_query);
+    }
+
 	// Plugin activation and deactivation
 	function activate() {
+		$this->my_custom_table();
 		$this->my_custom_post_type();
-
-		// Flush permalinks
-		flush_rewrite_rules();
+		$this->my_custom_taxonomy();
 	}
 	function deactivate() {
 		unregister_post_type( 'pooyesh' );
@@ -253,5 +287,59 @@ class Pooyesh {
 				break;
 		}
 	}
+
+	// Front pages of plugin
+	function plugin_custom_template($template) {
+
+		$post_type = 'pooyesh';
+
+		if ( is_post_type_archive( $post_type ) ){
+            $template = plugin_dir_path( __FILE__ ) . "template/archive-$post_type.php";
+		}
+
+		if ( is_singular( $post_type ) ){
+			$template = plugin_dir_path( __FILE__ ) . "template/single-$post_type.php";
+		}
+		return $template;
+	}
+
+    // Form submit sign
+	function prefix_save_custom_form_data(){
+		global $wpdb;
+        global $user_id;
+		$user_table = $wpdb->prefix . 'usermeta';
+        $insert_table = $wpdb->prefix . 'pooyesh_user';
+
+		$name  = isset( $_POST['name'] ) ? sanitize_text_field( $_POST['name'] ) : '';
+		$phone = isset( $_POST['phone'] ) ? sanitize_text_field( $_POST['phone'] ) : '';
+		$post_id = isset( $_POST['post_id'] ) ? sanitize_text_field( $_POST['post_id'] ) : '';
+
+		$result = $wpdb->get_results("SELECT COUNT(*) FROM $user_table WHERE meta_key = 'phone_number' AND meta_value = '".$phone."'", ARRAY_N);
+
+        if ($result > 0) {
+            $user_id = get_users( array(
+                    "meta_key" => "phone_number",
+                    "meta_value" => $phone,
+                    "fields" => "ID"
+                    ) );
+
+	        $wpdb->insert(
+			$insert_table,
+			array(
+				'user_id' => $user_id[0],
+				'post_id' => $post_id,
+                'date' => date('Y-m-d', strtotime("now")),
+			    )
+		    );
+	        echo $wpdb->insert_id;
+
+        } else {
+
+        }
+
+		// Use die to stop the ajax action
+		wp_die();
+	}
+
 }
 Pooyesh::init();
