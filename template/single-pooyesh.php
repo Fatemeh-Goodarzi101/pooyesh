@@ -51,9 +51,11 @@ get_header(); ?>
                 <input type="hidden" name="action" value="sample_custom_form_action">
                 <input style="display: none" type="text" name="post_id" value="<?php echo get_the_ID(); ?>">
 
-                <label class="custom-input" for="name"><b>نام و نام خانوادگی</b></label>
-                <input class="custom-input" type="text" id="name" name="name" required>
+                <label class="custom-input" for="first_name"><b>نام</b></label>
+                <input class="custom-input" type="text" id="first_name" name="first_name" required>
 
+                <label class="custom-input" for="last_name"><b>نام خانوادگی</b></label>
+                <input class="custom-input" type="text" id="last_name" name="last_name" required>
 
                 <label class="custom-input" for="phone"><b>شماره همراه</b></label>
                 <input class="custom-input" type="tel" id="phone" name="phone" pattern="[0-9]{11}" required>

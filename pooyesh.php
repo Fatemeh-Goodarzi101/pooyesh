@@ -147,7 +147,8 @@ class Pooyesh {
             date date NOT NULL,
             PRIMARY KEY id (id),
             FOREIGN KEY (user_id) REFERENCES ".$wpdb->prefix."users(id) ON DELETE CASCADE ON UPDATE CASCADE,
-            FOREIGN KEY (post_id) REFERENCES ".$wpdb->prefix."posts(id) ON DELETE CASCADE ON UPDATE CASCADE
+            FOREIGN KEY (post_id) REFERENCES ".$wpdb->prefix."posts(id) ON DELETE CASCADE ON UPDATE CASCADE,
+            UNIQUE KEY unique_index (user_id,post_id)
         )$charset_collate;";
 
 	    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
@@ -307,16 +308,17 @@ class Pooyesh {
 	function prefix_save_custom_form_data(){
 		global $wpdb;
         global $user_id;
-		$user_table = $wpdb->prefix . 'usermeta';
+		$user_meta_table = $wpdb->prefix . 'usermeta';
         $insert_table = $wpdb->prefix . 'pooyesh_user';
 
-		$name  = isset( $_POST['name'] ) ? sanitize_text_field( $_POST['name'] ) : '';
+		$first_name  = isset( $_POST['first_name'] ) ? sanitize_text_field( $_POST['first_name'] ) : '';
+		$last_name  = isset( $_POST['last_name'] ) ? sanitize_text_field( $_POST['last_name'] ) : '';
 		$phone = isset( $_POST['phone'] ) ? sanitize_text_field( $_POST['phone'] ) : '';
 		$post_id = isset( $_POST['post_id'] ) ? sanitize_text_field( $_POST['post_id'] ) : '';
 
-		$result = $wpdb->get_results("SELECT COUNT(*) FROM $user_table WHERE meta_key = 'phone_number' AND meta_value = '".$phone."'", ARRAY_N);
+		$result = $wpdb->get_results("SELECT * FROM $user_meta_table WHERE meta_key = 'phone_number' AND meta_value = '".$phone."'", ARRAY_N);
 
-        if ($result > 0) {
+        if (count($result) != 0) {
             $user_id = get_users( array(
                     "meta_key" => "phone_number",
                     "meta_value" => $phone,
@@ -324,17 +326,38 @@ class Pooyesh {
                     ) );
 
 	        $wpdb->insert(
-			$insert_table,
-			array(
-				'user_id' => $user_id[0],
-				'post_id' => $post_id,
-                'date' => date('Y-m-d', strtotime("now")),
-			    )
+                $insert_table,
+                array(
+                        'user_id' => $user_id[0],
+                        'post_id' => $post_id,
+                        'date' => date('Y-m-d', strtotime("now")),
+                    )
 		    );
 	        echo $wpdb->insert_id;
 
         } else {
 
+	        $random_password = wp_generate_password( 12, true, false );
+            $user_data = array(
+                'user_login' => $phone,
+                'user_pass'  => $random_password,
+                'first_name' => $first_name,
+                'last_name'  => $last_name
+            );
+
+	        $userid = wp_insert_user( $user_data );
+	        if ( !is_wp_error( $userid ) ) {
+		        add_user_meta( $userid, 'phone_number', $phone );
+	        }
+	        $wpdb->insert(
+		        $insert_table,
+		        array(
+			        'user_id' => $userid,
+			        'post_id' => $post_id,
+			        'date' => date('Y-m-d', strtotime("now")),
+		        )
+	        );
+	        echo $wpdb->insert_id;
         }
 
 		// Use die to stop the ajax action
