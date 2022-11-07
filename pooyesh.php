@@ -31,9 +31,8 @@ class Pooyesh {
 
 	private function __construct() {
 
-		// Add custom post type and taxonomy: pooyesh
+		// Add custom post type: pooyesh
 		add_action( 'init', array( $this, 'my_custom_post_type') );
-		add_action( 'init', array( $this, 'my_custom_taxonomy' ) );
 
 		// Plugin activation and deactivation
 		register_activation_hook( __FILE__, array( $this, 'activate' ) );
@@ -105,32 +104,11 @@ class Pooyesh {
 			'has_archive'        => true,
 			'hierarchical'       => false,
 			'supports'           => array( 'title', 'thumbnail', 'editor' ),
+			'taxonomies'         => array( 'category' ),
 		);
 
 		register_post_type( 'pooyesh', $args );
 	}
-    function my_custom_taxonomy() {
-	    $labels = array(
-		    'name' => _x( 'Pooyesh Categories', 'taxonomy general name' ),
-		    'singular_name' => _x( 'Pooyesh Category', 'taxonomy singular name' ),
-		    'search_items' => __( 'Search Pooyesh Categories' ),
-		    'all_items' => __( 'All Pooyesh Categories' ),
-		    'parent_item' => __( 'Parent Pooyesh Category' ),
-		    'parent_item_colon' => __( 'Parent Pooyesh Category:' ),
-		    'edit_item' => __( 'Edit Pooyesh Category' ),
-		    'update_item' => __( 'Update Pooyesh Category' ),
-		    'add_new_item' => __( 'Add New Pooyesh Category' ),
-		    'new_item_name' => __( 'New Pooyesh Category' ),
-		    'menu_name' => __( 'Categories' ),
-	    );
-
-	    $args = array(
-		    'labels' => $labels,
-		    'hierarchical' => true,
-	    );
-
-	    register_taxonomy( 'pooyesh_category', 'pooyesh', $args );
-    }
 
     // Create new table in database
     function my_custom_table(){
@@ -159,7 +137,6 @@ class Pooyesh {
 	function activate() {
 		$this->my_custom_table();
 		$this->my_custom_post_type();
-		$this->my_custom_taxonomy();
 	}
 	function deactivate() {
 		unregister_post_type( 'pooyesh' );
@@ -174,6 +151,7 @@ class Pooyesh {
 			array( $this, 'display_meta_box_information' ),  // display function
 			'pooyesh'                             // post type
 		);
+
 	}
 	function display_meta_box_information( $post ) {
 		wp_nonce_field( 'poo_my_nonce', 'poo_nonce_field' );
