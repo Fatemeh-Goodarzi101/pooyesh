@@ -60,6 +60,8 @@ class Pooyesh {
 		add_action( 'wp_ajax_sample_custom_form_action', array( $this, 'prefix_save_custom_form_data' ) );
 		add_action( 'wp_ajax_nopriv_sample_custom_form_action', array( $this, 'prefix_save_custom_form_data' ) );
 
+        // Category based on post type => pooyesh
+		add_action('save_post', array( $this, 'add_title_as_category') );
 	}
 
 	// Include CSS, JS admin file for Plugin
@@ -349,6 +351,25 @@ class Pooyesh {
 
 		// Use die to stop the ajax action
 		wp_die();
+	}
+
+    // Category based on post type => pooyesh
+	function add_title_as_category( $post_id ) {
+		if ( defined('DOING_AUTOSAVE') && DOING_AUTOSAVE ) return;
+		$post = get_post($post_id);
+		if ( $post->post_type == 'pooyesh') { // change 'post' to any cpt you want to target
+			$term = get_term_by('slug', $post->post_name, 'category');
+			if ( empty($term) ) {
+				$add = wp_insert_term( $post->post_title, 'category', array('slug'=> $post->post_name) );
+				if ( is_array($add) && isset($add['term_id']) ) {
+					wp_set_object_terms($post_id, $add['term_id'], 'category', true );
+				}
+			} else {
+				wp_update_term($term->term_id, 'category', array(
+					'name' => $post->post_title
+				));
+			}
+		}
 	}
 
 }
