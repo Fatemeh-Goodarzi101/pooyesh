@@ -43,6 +43,7 @@ class Pooyesh {
 		// Include CSS, JS admin file for Plugin
 		add_action( 'admin_enqueue_scripts', array( $this, 'resources' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'front_style' ) );
+		add_action('wp_head', array( $this, 'wpb_hook_javascript' ) );
 
 		// Add custom fields to pooyesh post type
 		add_action( 'add_meta_boxes', array( $this, 'add_meta_boxes' ) );
@@ -69,7 +70,15 @@ class Pooyesh {
 
     function front_style() {
 	    wp_enqueue_style( 'bootstrap-front-css', plugin_dir_url( __FILE__ ) . 'public/css/app.css' );
+	    wp_enqueue_script( 'bootstrap-front-js', plugin_dir_url( __FILE__ ) . 'public/js/app.js' );
     }
+	
+	function wpb_hook_javascript() {
+    ?>
+        <script src="https://kit.fontawesome.com/0e3ee621dd.js" 			crossorigin="anonymous">
+        </script>
+    <?php
+	}
 
 	// Add custom post type and taxonomy: pooyesh
 	function my_custom_post_type() {
