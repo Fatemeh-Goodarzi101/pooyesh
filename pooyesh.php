@@ -158,7 +158,7 @@ class Pooyesh {
 	function add_meta_boxes() {
 		add_meta_box(
 			'pooyesh_meta_box',       // id
-			__( 'Detail', 'pooyesh' ),       // name
+			__( 'جزئیات پویش', 'pooyesh' ),       // name
 			array( $this, 'display_meta_box_information' ),  // display function
 			'pooyesh'                             // post type
 		);
@@ -173,6 +173,8 @@ class Pooyesh {
 		$end_date = get_post_meta( $post->ID, '_poo_end_date', true );
 		$status = get_post_meta( $post->ID, '_poo_status', true );
 		$sign_count = get_post_meta( $post->ID, '_poo_sign_count', true );
+        $chosen = get_post_meta( $post->ID, '_poo_chosen' , true);
+        $progress_bar = get_post_meta( $post->ID, '_poo_progress_bar' , true);
 
 		do_action( 'pooyesh_edit_start' );
 		?>
@@ -180,38 +182,52 @@ class Pooyesh {
 		<table class="pooyesh-edit-table" role="presentation">
 			<tbody>
                 <tr>
-                    <td class="col-lg-7">
-                        <label for="_poo_support"><?php _e( 'Support', 'pooyesh' ); ?></label>
-                        <input type="text" name="_poo_support" id="_poo_support" value="<?php echo $support; ?>">
+                    <td class="col-lg-8">
+                        <label for="_poo_support"><?php _e( 'از طرف', 'pooyesh' ); ?></label>
+                        <input style="margin: 5px;" type="text" name="_poo_support" id="_poo_support" value="<?php echo $support; ?>">
                     </td>
 
-                    <td class="col-lg-7">
-                        <label for="_poo_hashtag"><?php _e( 'Hashtag', 'pooyesh' ); ?></label>
+                    <td class="col-lg-8">
+                        <label for="_poo_hashtag"><?php _e( 'هشتگ', 'pooyesh' ); ?></label>
                         <input type="text" name="_poo_hashtag" id="_poo_hashtag" value="<?php echo $hashtag; ?>">
                     </td>
-                    </div>
                 </tr>
                 <tr>
-                    <td class="col-lg-7">
-                        <label for="_poo_start_date"><?php _e( 'Start Date', 'pooyesh' ); ?></label>
-                        <input type="date" name="_poo_start_date" id="_poo_start_date" value="<?php echo $start_date; ?>">
+                    <td class="col-lg-8">
+                        <label for="_poo_start_date"><?php _e( 'تاریخ شروع', 'pooyesh' ); ?></label>
+                        <input style="margin: 5px;" type="date" name="_poo_start_date" id="_poo_start_date" value="<?php echo $start_date; ?>">
                     </td>
-                    <td class="col-lg-7">
-                        <label for="_poo_end_date"><?php _e( 'End Date', 'pooyesh' ); ?></label>
+                    <td class="col-lg-8">
+                        <label for="_poo_end_date"><?php _e( 'تاریخ پایان', 'pooyesh' ); ?></label>
                         <input type="date" name="_poo_end_date" id="_poo_end_date" value="<?php echo $end_date; ?>">
                     </td>
                 </tr>
                 <tr>
-                    <td class="col-lg-7">
-                        <label for="_poo_sign_count"><?php _e( 'Sign Count', 'pooyesh' ); ?></label>
-                        <input type="text" name="_poo_sign_count" id="_poo_sign_count" value="<?php echo $sign_count; ?>">
+                    <td class="col-lg-6">
+                        <label for="_poo_sign_count"><?php _e( 'تعداد امضا', 'pooyesh' ); ?></label>
+                        <input style="margin: 5px;" readonly type="text" name="_poo_sign_count" id="_poo_sign_count" value="<?php echo $sign_count; ?>">
                     </td>
 
-                    <td class="col-lg-7">
-                        <label for="_poo_status"><?php _e( 'Status', 'pooyesh' ); ?></label>
-                        <input type="text" name="_poo_status" id="_poo_status" value="<?php echo $status; ?>">
+                    <td class="col-lg-6">
+                        <label for="_poo_progress_bar"><?php _e( 'درصد پیشرفت', 'pooyesh' ); ?></label>
+                        <input type="text" name="_poo_progress_bar" id="_poo_progress_bar" value="<?php echo $progress_bar; ?>">
                     </td>
-                    </div>
+                </tr>
+                <tr>
+                    <td class="col-lg-8">
+                        <label style="margin: 5px;" for="_poo_status"><?php _e( 'وضعیت', 'pooyesh' ); ?></label><br>
+                        <input type="radio" id="_poo_status_done" name="_poo_status" value="done" <?php if($status=='done'){ echo "checked=checked";}  ?>>
+                        <label for="age1">به اتمام رسیده</label><br>
+                        <input type="radio" id="_poo_status_doing" name="_poo_status" value="doing" <?php if($status=='doing'){ echo "checked=checked";}  ?>>
+                        <label for="age2">در حال اجرا است</label><br>
+                    </td>
+                    <td class="col-lg-8">
+                        <label style="margin: 5px;" for="_poo_sign_count"><?php _e( 'انتخاب به عنوان پویش برگزیده', 'pooyesh' ); ?></label><br>
+                        <input type="radio" id="_poo_chosen_yes" name="_poo_chosen" value="yes" <?php if($chosen=='yes'){ echo "checked=checked";}  ?>>
+                        <label for="age1">بله</label><br>
+                        <input type="radio" id="_poo_chosen_no" name="_poo_chosen" value="no" <?php if($chosen=='no'){ echo "checked=checked";}  ?>>
+                        <label for="age2">خیر</label><br>
+                    </td>
                 </tr>
 			</tbody>
 		</table>
@@ -230,7 +246,9 @@ class Pooyesh {
 			'_poo_start_date',
             '_poo_end_date',
             '_poo_status',
-            '_poo_sign_count'
+            '_poo_sign_count',
+            '_poo_chosen',
+            '_poo_progress_bar'
 		];
 		foreach ( $fields as $field ) {
 			if ( array_key_exists( $field, $_POST ) ) {
