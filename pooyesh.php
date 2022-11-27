@@ -62,6 +62,7 @@ class Pooyesh {
 
         // Category based on post type => pooyesh
 		add_action('save_post', array( $this, 'add_title_as_category') );
+
 	}
 
 	// Include CSS, JS admin file for Plugin
@@ -77,8 +78,9 @@ class Pooyesh {
 	
 	function wpb_hook_javascript() {
     ?>
-        <script src="https://kit.fontawesome.com/0e3ee621dd.js" 			crossorigin="anonymous">
-        </script>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
     <?php
 	}
 
@@ -389,6 +391,7 @@ class Pooyesh {
 			}
 		}
 	}
+
 
 }
 Pooyesh::init();
