@@ -9,6 +9,11 @@ get_header(); ?>
 	    $sign_count = get_post_meta( get_the_ID() , '_poo_sign_count' , true);
 	    $url = wp_get_attachment_url( get_post_thumbnail_id( get_the_ID() ), 'thumbnail' );
 
+		$hastag = get_post_meta( get_the_ID() , '_poo_hashtag' , true);
+	    $support = get_post_meta( get_the_ID() , '_poo_support' , true);
+	    $start_date = get_post_meta( get_the_ID() , '_poo_start_date' , true);
+	    $end_date = get_post_meta( get_the_ID() , '_poo_end_date' , true);
+
 	    $user_id = get_current_user_id();
         $post_id = get_the_ID();
 	    global $wpdb;
@@ -19,6 +24,9 @@ get_header(); ?>
              From $table AS pu
              Inner Join $join_table AS p ON pu.post_id = p.ID
              WHERE pu.user_id = $user_id And pu.post_id = $post_id" );
+
+		$cat_detail = get_the_category($post_id);//$post->ID
+		$cat_id = $cat_detail[0]->term_id;
 	    ?>
         <div class="container">
             <div class="row">
@@ -42,15 +50,16 @@ get_header(); ?>
             <div class="col-sm-12" style=" margin:10px;">
                 <?php
                 if(empty($result)) { ?>
-                    <button type="button" class="btn btn-success pull-right" data-toggle="modal" data-target="#myModal">
+                    <button id="<?php echo $post_id; ?>" type="button" class="btn btn-success pull-right submit-digits">
                         عضو
                         میشوم
                         <span class="glyphicon glyphicon-plus-sign"></span>
                     </button>
                 <?php } else { ?>
 	                <div>
-                        <h5 style="display: inline-block;">عضو هستید</h5>
-                        <span class="glyphicon glyphicon-ok-sign"></span>
+                        <button type="button" class="btn btn-warning pull-right">عضو هستید
+                           <span class="glyphicon glyphicon-ok-sign"></span>
+                        </button>
                     </div>
                 <?php }
                 ?>
@@ -62,7 +71,28 @@ get_header(); ?>
 	                    <?php  the_content();  ?>
                     </p>
                 </div>
-
+				
+              <div class="row">
+                <div class="column">
+                    <b>.</b>
+                    پایان پویش: <?php echo $end_date; ?>
+                </div>
+                <div class="column">
+                    <b>.</b>
+                    شروع پویش: <?php echo $start_date; ?>
+                </div>
+            </div>
+            <div class="row">
+                <div class="column">
+                    <b>.</b>
+                    از طرف: <?php echo $support; ?>
+                </div>
+                <div class="column">
+                    <b>.</b>
+                    هشتگ رسمی: #<?php echo $hastag; ?>
+                </div>
+            </div>
+              
                 <div>
                     <h4>پیشرفت پویش</h4>
                     <div class="progress">
@@ -74,20 +104,37 @@ get_header(); ?>
                 </div>
             </div>
         </div>
-    <script>
-        // Javascript to send ajax request
-        jQuery(document).on('submit', '.custom-form-class', function(e){
-            let formData = jQuery(this).serialize();
-
-            // Change ajax url value to your domain
-            let ajaxurl = 'http://192.168.10.50/servertest/wp-admin/admin-ajax.php';
-
-            // Send ajax
-            jQuery.post(ajaxurl, formData, function(response) {
-                alert('امضای شما با موفقیت ثبت شد: ' + response);
-            });
-        });
-    </script>
     <?php endwhile; // End of the loop. ?>
-
+	
+ <div class="container">
+	<!-- Latest News Part  -->
+    <h3>اخبار مرتبط با پویش‌:</h3><br>
+    <?php
+    global $post;
+    $cat_posts = get_posts( array(
+	    'posts_per_page' => 10,
+	    'category'       => $cat_id
+    ) );
+    if ( $cat_posts ) { ?>
+        <div class="card-group" style="display: flex">
+            <?php
+	        foreach ( $cat_posts as $post ) :
+		    setup_postdata( $post );
+		    $url = wp_get_attachment_url( get_post_thumbnail_id( get_the_ID() ), 'thumbnail' );
+		    ?>
+          	<a href="<?php the_permalink(); ?>">	
+                <div class="card" style="width: 18rem; margin: 5px;">
+                    <img style=" width: 300px; height: 250px;" src="<?php echo $url ?>" class="card-img-top" alt="<?php the_title(); ?>">
+                    <div class="card-body">
+                        <p class="card-title"><?php the_title(); ?></p>
+                    </div>
+                </div>
+          </a>
+	    <?php
+	    endforeach;
+	    wp_reset_postdata(); ?>
+        </div>
+    <?php }
+    ?>
+</div>
 <?php get_footer(); ?>

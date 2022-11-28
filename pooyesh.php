@@ -43,6 +43,7 @@ class Pooyesh {
 		// Include CSS, JS admin file for Plugin
 		add_action( 'admin_enqueue_scripts', array( $this, 'resources' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'front_style' ) );
+      	add_action( 'wp_enqueue_scripts', array( $this, 'ajax_code' ) );
 		add_action('wp_head', array( $this, 'wpb_hook_javascript' ) );
 
 		// Add custom fields to pooyesh post type
@@ -57,8 +58,8 @@ class Pooyesh {
 		add_filter( 'template_include',  array( $this, 'plugin_custom_template' ) );
 
         // Form submit sign
-		add_action( 'wp_ajax_sample_custom_form_action', array( $this, 'prefix_save_custom_form_data' ) );
-		add_action( 'wp_ajax_nopriv_sample_custom_form_action', array( $this, 'prefix_save_custom_form_data' ) );
+		add_action( 'wp_ajax_prefix_save_custom_form_data', array( $this, 'prefix_save_custom_form_data' ) );
+		add_action( 'wp_ajax_nopriv_prefix_save_custom_form_data', array( $this, 'prefix_save_custom_form_data' ) );
 
         // Category based on post type => pooyesh
 		add_action('save_post', array( $this, 'add_title_as_category') );
@@ -76,6 +77,12 @@ class Pooyesh {
 	    wp_enqueue_script( 'bootstrap-front-js', plugin_dir_url( __FILE__ ) . 'public/js/app.js' );
     }
 	
+  	function ajax_code($hook) {
+      	wp_enqueue_script( 'pooyesh-js', plugin_dir_url( __FILE__ ) . 'public/js/poo.js' , array('jquery'),false,true );
+      	$rest_nonce = wp_create_nonce( 'wp_rest' );
+      	wp_localize_script( 'pooyesh-js', 'my_var', array( 'ajaxurl' => admin_url( 'admin-ajax.php'), 'nonce' => $rest_nonce, ));
+    }
+  
 	function wpb_hook_javascript() {
     ?>
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
@@ -315,62 +322,29 @@ class Pooyesh {
 
     // Form submit sign
 	function prefix_save_custom_form_data(){
-		global $wpdb;
-        global $user_id;
-		$user_meta_table = $wpdb->prefix . 'usermeta';
-        $insert_table = $wpdb->prefix . 'pooyesh_user';
-
-		$first_name  = isset( $_POST['first_name'] ) ? sanitize_text_field( $_POST['first_name'] ) : '';
-		$last_name  = isset( $_POST['last_name'] ) ? sanitize_text_field( $_POST['last_name'] ) : '';
-		$phone = isset( $_POST['phone'] ) ? sanitize_text_field( $_POST['phone'] ) : '';
-		$post_id = isset( $_POST['post_id'] ) ? sanitize_text_field( $_POST['post_id'] ) : '';
-
-		$result = $wpdb->get_results("SELECT * FROM $user_meta_table WHERE meta_key = 'phone_number' AND meta_value = '".$phone."'", ARRAY_N);
-
-        if (count($result) != 0) {
-            $user_id = get_users( array(
-                    "meta_key" => "phone_number",
-                    "meta_value" => $phone,
-                    "fields" => "ID"
-                    ) );
-
-	        $wpdb->insert(
+        if ( wp_verify_nonce( $_POST['_wpnonce'], 'wp_rest' ) ){
+          global $wpdb;
+          global $current_user;
+		  $user_id = $current_user->ID;
+          if ($user_id != 0) {
+            $insert_table = $wpdb->prefix . 'pooyesh_user';
+            $insert_id = $wpdb->insert(
                 $insert_table,
                 array(
-                        'user_id' => $user_id[0],
-                        'post_id' => $post_id,
-                        'date' => date('Y-m-d', strtotime("now")),
-                    )
-		    );
-	        echo $wpdb->insert_id;
-
-        } else {
-
-	        $random_password = wp_generate_password( 12, true, false );
-            $user_data = array(
-                'user_login' => $phone,
-                'user_pass'  => $random_password,
-                'first_name' => $first_name,
-                'last_name'  => $last_name
+                    'user_id' => $user_id,
+                    'post_id' => $_POST['post_id'],
+                    'date' => date('Y-m-d', strtotime("now")),
+                )
             );
-
-	        $userid = wp_insert_user( $user_data );
-	        if ( !is_wp_error( $userid ) ) {
-		        add_user_meta( $userid, 'phone_number', $phone );
-	        }
-	        $wpdb->insert(
-		        $insert_table,
-		        array(
-			        'user_id' => $userid,
-			        'post_id' => $post_id,
-			        'date' => date('Y-m-d', strtotime("now")),
-		        )
-	        );
-	        echo $wpdb->insert_id;
+            $sign_count = get_post_meta( $_POST['post_id'] , '_poo_sign_count' , true);
+            $sign_count = $sign_count + 1;
+            update_post_meta( $_POST['post_id'], '_poo_sign_count', $sign_count );
+          }
+          
+        } else {
+            echo 'nonce check failed';
+            exit;
         }
-
-		// Use die to stop the ajax action
-		wp_die();
 	}
 
     // Category based on post type => pooyesh
