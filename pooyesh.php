@@ -40,12 +40,6 @@ class Pooyesh {
 		register_deactivation_hook( __FILE__, array( $this, 'deactivate' ) );
 		add_action( 'after_switch_theme', array( $this, 'activate' ) );
 
-		// Include CSS, JS admin file for Plugin
-		add_action( 'admin_enqueue_scripts', array( $this, 'resources' ) );
-		add_action( 'wp_enqueue_scripts', array( $this, 'front_style' ) );
-      	add_action( 'wp_enqueue_scripts', array( $this, 'ajax_code' ) );
-		add_action('wp_head', array( $this, 'wpb_hook_javascript' ) );
-
 		// Add custom fields to pooyesh post type
 		add_action( 'add_meta_boxes', array( $this, 'add_meta_boxes' ) );
 		add_action( 'save_post', array( $this, 'save_meta_box' ) );
@@ -58,38 +52,33 @@ class Pooyesh {
 		add_filter( 'template_include',  array( $this, 'plugin_custom_template' ) );
 
         // Form submit sign
+      	add_action( 'wp_enqueue_scripts', array( $this, 'ajax_code' ) );
 		add_action( 'wp_ajax_prefix_save_custom_form_data', array( $this, 'prefix_save_custom_form_data' ) );
 		add_action( 'wp_ajax_nopriv_prefix_save_custom_form_data', array( $this, 'prefix_save_custom_form_data' ) );
 
         // Category based on post type => pooyesh
 		add_action('save_post', array( $this, 'add_title_as_category') );
 
+      	add_action('wp_head', array( $this, 'wpb_hook_javascript' ) );
 	}
-
-	// Include CSS, JS admin file for Plugin
-	function resources() {
-		wp_enqueue_style( 'bootstrap-css', plugin_dir_url( __FILE__ ) . 'admin/css/bootstrap.min.css' );
-		wp_enqueue_script( 'bootstrap-js', plugin_dir_url( __FILE__ ) . 'admin/js/bootstrap.min.js' );
-	}
-
-    function front_style() {
-	    wp_enqueue_style( 'bootstrap-front-css', plugin_dir_url( __FILE__ ) . 'public/css/app.css' );
-	    wp_enqueue_script( 'bootstrap-front-js', plugin_dir_url( __FILE__ ) . 'public/js/app.js' );
-    }
 	
+  	
   	function ajax_code($hook) {
       	wp_enqueue_script( 'pooyesh-js', plugin_dir_url( __FILE__ ) . 'public/js/poo.js' , array('jquery'),false,true );
       	$rest_nonce = wp_create_nonce( 'wp_rest' );
       	wp_localize_script( 'pooyesh-js', 'my_var', array( 'ajaxurl' => admin_url( 'admin-ajax.php'), 'nonce' => $rest_nonce, ));
     }
   
-	function wpb_hook_javascript() {
-    ?>
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
-    <?php
-	}
+    function wpb_hook_javascript() {
+      if ( is_post_type_archive( 'pooyesh' ) || is_singular('pooyesh') ) {
+        ?>
+         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+        <?php }
+      }
+
+  
 
 	// Add custom post type and taxonomy: pooyesh
 	function my_custom_post_type() {
@@ -338,7 +327,8 @@ class Pooyesh {
             );
             $sign_count = get_post_meta( $_POST['post_id'] , '_poo_sign_count' , true);
             $sign_count = $sign_count + 1;
-            update_post_meta( $_POST['post_id'], '_poo_sign_count', $sign_count );
+            update_post_meta( $_POST['post_id'], '_poo_sign_count', $sign_count ); 
+            exit;
           }
           
         } else {

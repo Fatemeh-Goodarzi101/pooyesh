@@ -21,7 +21,7 @@ get_header(); ?>
 		    $url = wp_get_attachment_url( get_post_thumbnail_id( get_the_ID() ), 'thumbnail' );
 		    ?>
           	<a href="<?php the_permalink(); ?>">	
-                <div class="card" style="width: 18rem; margin: 5px;">
+                <div class="card" style="margin: 5px;">
                     <img style=" width: 300px; height: 250px;" src="<?php echo $url ?>" class="card-img-top" alt="<?php the_title(); ?>">
                     <div class="card-body">
                         <p class="card-title"><?php the_title(); ?></p>

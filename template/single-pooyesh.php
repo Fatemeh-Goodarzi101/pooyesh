@@ -28,7 +28,7 @@ get_header(); ?>
 		$cat_detail = get_the_category($post_id);//$post->ID
 		$cat_id = $cat_detail[0]->term_id;
 	    ?>
-        <div class="container">
+        <div class="container" style="font-family: system-ui;">
             <div class="row">
                 <div class="col-sm-12">
                     <div style="background-image: url(<?php echo $url; ?>); background-repeat: no-repeat; background-size:cover; height: 300px;">
@@ -72,26 +72,26 @@ get_header(); ?>
                     </p>
                 </div>
 				
-              <div class="row">
-                <div class="column">
+              <div class="col-lg-12">
+                <div class="col-lg-6">
                     <b>.</b>
                     پایان پویش: <?php echo $end_date; ?>
                 </div>
-                <div class="column">
+                <div class="col-lg-6">
                     <b>.</b>
                     شروع پویش: <?php echo $start_date; ?>
                 </div>
-            </div>
-            <div class="row">
-                <div class="column">
+            </div><br>
+            <div class="col-lg-12">
+                <div class="col-lg-6">
                     <b>.</b>
                     از طرف: <?php echo $support; ?>
                 </div>
-                <div class="column">
+                <div class="col-lg-6">
                     <b>.</b>
                     هشتگ رسمی: #<?php echo $hastag; ?>
                 </div>
-            </div>
+            </div><br>
               
                 <div>
                     <h4>پیشرفت پویش</h4>
